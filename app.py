@@ -1,4 +1,4 @@
-﻿"""
+"""
 ScamShield 2.0 - Streamlit web UI
 Run with:  streamlit run app.py
 Requires scamshield_chain.py in the same folder, and az login already done.
@@ -50,8 +50,7 @@ st.markdown(
 
     .ss-scale-track {
         position: relative; height: 10px; border-radius: 6px; margin: 18px 0 10px 0;
-        background: linear-gradient(to right, #2F7D5B 0%, #2F7D5B 33%, #B8860B 33%, #B8860B 66%, #B23A2E 66%, #B23A2E 100%);
-        opacity: 0.35;
+        background: linear-gradient(to right, rgba(47,125,91,0.35) 0%, rgba(47,125,91,0.35) 33%, rgba(184,134,11,0.35) 33%, rgba(184,134,11,0.35) 66%, rgba(178,58,46,0.35) 66%, rgba(178,58,46,0.35) 100%);
     }
     .ss-scale-marker {
         position: absolute; top: -7px; width: 0; height: 0;
@@ -159,10 +158,9 @@ if analyze_clicked:
             risk = result.get("risk_level", "Medium")
             meta = RISK_META.get(risk, RISK_META["Medium"])
 
-            st.markdown('<div class="ss-panel">', unsafe_allow_html=True)
-
             st.markdown(
                 f"""
+                <div class="ss-panel">
                 <div class="ss-verdict-label" style="color:{meta['color']};">{meta['emoji']} {risk} risk</div>
                 <div class="ss-confidence">Confidence: {result.get('confidence', 'N/A')}</div>
                 <div class="ss-reason">{result.get('reason', '')}</div>
@@ -171,10 +169,10 @@ if analyze_clicked:
                 <div class="ss-scale-track">
                     <div class="ss-scale-marker" style="left:{meta['position']}%; border-top: 12px solid {meta['color']};"></div>
                 </div>
+                </div>
                 """,
                 unsafe_allow_html=True,
             )
-            st.markdown("</div>", unsafe_allow_html=True)
 
             evidence = result.get("evidence", [])
             st.markdown('<div class="ss-section-title">Why this was flagged</div>', unsafe_allow_html=True)
