@@ -1,11 +1,11 @@
-"""
+﻿"""
 ScamShield 2.0 - Streamlit web UI
 Run with:  streamlit run app.py
 Requires scamshield_chain.py in the same folder, and az login already done.
 """
 
 import streamlit as st
-from scamshield_chain import analyze_message
+from fast_analyzer import quick_analyze
 from file_reader import extract_text_from_file
 
 st.set_page_config(page_title="ScamShield 2.0", page_icon="\U0001F6E1", layout="centered")
@@ -50,7 +50,8 @@ st.markdown(
 
     .ss-scale-track {
         position: relative; height: 10px; border-radius: 6px; margin: 18px 0 10px 0;
-        background: linear-gradient(to right, rgba(47,125,91,0.35) 0%, rgba(47,125,91,0.35) 33%, rgba(184,134,11,0.35) 33%, rgba(184,134,11,0.35) 66%, rgba(178,58,46,0.35) 66%, rgba(178,58,46,0.35) 100%);
+        background: linear-gradient(to right, #2F7D5B 0%, #2F7D5B 33%, #B8860B 33%, #B8860B 66%, #B23A2E 66%, #B23A2E 100%);
+        opacity: 0.35;
     }
     .ss-scale-marker {
         position: absolute; top: -7px; width: 0; height: 0;
@@ -127,7 +128,7 @@ analyze_clicked = st.button("Analyze", type="primary", use_container_width=True)
 # Result
 # ---------------------------------------------------------------------------
 if analyze_clicked:
-    text_to_analyze = message.strip()
+    text_to_analyze = message.strip()[:4000]
     if uploaded_file is not None:
         extracted = ""
         with st.spinner("Reading your file..."):
@@ -140,16 +141,17 @@ if analyze_clicked:
         if extracted == "NO_MESSAGE_FOUND":
             st.warning("No readable message was found in that file.")
         elif extracted:
-            text_to_analyze = (text_to_analyze + "\n\n" + extracted).strip()
+            extracted = extracted[:4000]
+            text_to_analyze = (text_to_analyze + "\n\n" + extracted).strip()[:4000]
             with st.expander("What ScamShield read from your file"):
                 st.text(extracted)
 
     if not text_to_analyze:
         st.warning("Please enter a message or upload a file first.")
     else:
-        with st.spinner("Running the 5-stage analysis..."):
+        with st.spinner("Analyzing..."):
             try:
-                result = analyze_message(text_to_analyze)
+                result = quick_analyze(text_to_analyze)
             except Exception as e:
                 st.error(f"Something went wrong while analyzing: {e}")
                 result = None
@@ -158,40 +160,38 @@ if analyze_clicked:
             risk = result.get("risk_level", "Medium")
             meta = RISK_META.get(risk, RISK_META["Medium"])
 
+            st.markdown('<div class="ss-panel">', unsafe_allow_html=True)
+
+            score = result.get("risk_score")
+            score_html = f" &middot; Score: {score}/100" if score is not None else ""
+            scam_type = result.get("scam_type")
+            type_html = f" &middot; Type: {scam_type}" if scam_type else ""
             st.markdown(
                 f"""
-                <div class="ss-panel">
                 <div class="ss-verdict-label" style="color:{meta['color']};">{meta['emoji']} {risk} risk</div>
-                <div class="ss-confidence">Confidence: {result.get('confidence', 'N/A')}</div>
-                <div class="ss-reason">{result.get('reason', '')}</div>
+                <div class="ss-confidence">{score_html}{type_html}</div>
 
                 <div class="ss-scale-labels"><span>Low</span><span>Medium</span><span>High</span></div>
                 <div class="ss-scale-track">
                     <div class="ss-scale-marker" style="left:{meta['position']}%; border-top: 12px solid {meta['color']};"></div>
                 </div>
-                </div>
                 """,
                 unsafe_allow_html=True,
             )
+            st.markdown("</div>", unsafe_allow_html=True)
 
-            evidence = result.get("evidence", [])
+            indicators = result.get("indicators", [])
             st.markdown('<div class="ss-section-title">Why this was flagged</div>', unsafe_allow_html=True)
-            if evidence:
-                for point in evidence:
+            if indicators:
+                for point in indicators:
                     st.markdown(f'<div class="ss-evidence-item">{point}</div>', unsafe_allow_html=True)
             else:
                 st.markdown('<div class="ss-evidence-item">No suspicious patterns detected.</div>', unsafe_allow_html=True)
 
             st.markdown('<div class="ss-section-title">What to do</div>', unsafe_allow_html=True)
-            st.info(result.get("recommended_action", ""))
+            st.info(result.get("recommendation", ""))
 
-            do_not = result.get("do_not", [])
-            if do_not:
-                st.markdown('<div class="ss-section-title">Avoid</div>', unsafe_allow_html=True)
-                for item in do_not:
-                    st.markdown(f'<div class="ss-avoid-item">&#10005; {item}</div>', unsafe_allow_html=True)
-
-            with st.expander("See full technical output (entities, patterns, JSON)"):
+            with st.expander("See full technical output (JSON)"):
                 st.json(result)
 
 st.markdown(
