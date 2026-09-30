@@ -87,6 +87,26 @@ def call_stage(system_prompt: str, user_content: str) -> dict:
 
 
 def analyze_message(message: str) -> dict:
+    try:
+        return _analyze_message_core(message)
+    except Exception as e:
+        msg = str(e)
+        if "content_filter" in msg or "jailbreak" in msg.lower():
+            return {
+                "message": message,
+                "entities": {},
+                "patterns": {"patterns": []},
+                "risk_level": "High",
+                "confidence": 1.0,
+                "reason": "This message triggered a content safety filter, which itself is a strong signal of extreme or manipulative language; treated conservatively as High risk.",
+                "evidence": ["Could not be fully analyzed because it triggered a safety filter, which often indicates explicit threats or an attempt to manipulate the AI."],
+                "recommended_action": "Treat this as high risk. Do not comply with any demands. If you feel unsafe, contact local police.",
+                "do_not": ["Send money or personal details", "Click any link in the message", "Engage further with the sender"],
+            }
+        raise
+
+
+def _analyze_message_core(message: str) -> dict:
     """Run the full 5-stage chain on a single message and return the combined result."""
 
     entities = call_stage(PROMPT_1_EXTRACT, message)

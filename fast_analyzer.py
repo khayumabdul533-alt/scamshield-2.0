@@ -57,6 +57,25 @@ Never tell the user to click any link in the message. Never invent a specific of
 
 
 def quick_analyze(text: str) -> dict:
+    try:
+        return _quick_analyze_core(text)
+    except Exception as e:
+        msg = str(e)
+        if "content_filter" in msg or "jailbreak" in msg.lower():
+            _, local_flags = preprocess(text)
+            local_hits = [k.replace("_", " ") for k, v in local_flags.items() if v]
+            return {
+                "risk_level": "High",
+                "risk_score": 95,
+                "scam_type": "Could not fully analyze (safety filter triggered)",
+                "indicators": local_hits or ["message triggered a content safety filter"],
+                "recommendation": "Treat this as high risk. Do not comply with any demands. If you feel unsafe, contact local police.",
+                "local_flags": local_flags,
+            }
+        raise
+
+
+def _quick_analyze_core(text: str) -> dict:
     """One compact LLM call for live use. Local indicators are merged in
     even if the model's own indicators list misses one."""
     sanitized, local_flags = preprocess(text)
