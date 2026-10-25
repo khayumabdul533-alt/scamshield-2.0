@@ -357,4 +357,4 @@ st.markdown(
     f'<div class="ss-footer">{t(language, "footer")}<br>AI analysis is an aid, not a guarantee &middot; always verify important requests independently.</div>',
     unsafe_allow_html=True,
 )
-st.markdown("""<style>[data-testid="stTextArea"] textarea{color:#0f172a !important;-webkit-text-fill-color:#0f172a !important;background-color:#ffffff !important;opacity:1 !important;caret-color:#0f172a !important;font-size:16px !important;}[data-testid="stTextArea"] textarea::placeholder{color:#64748b !important;-webkit-text-fill-color:#64748b !important;opacity:1 !important;}</style>""", unsafe_allow_html=True)
+st.markdown("""<style>[data-testid="stTextArea"] textarea{color:var(--text) !important;-webkit-text-fill-color:var(--text) !important;background-color:rgba(255,255,255,0.05) !important;opacity:1 !important;caret-color:var(--text) !important;font-size:16px !important;}[data-testid="stTextArea"] textarea::placeholder{color:#64748b !important;-webkit-text-fill-color:#64748b !important;opacity:1 !important;}</style>""", unsafe_allow_html=True)
